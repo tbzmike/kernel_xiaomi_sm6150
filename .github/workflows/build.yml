@@ -1,6 +1,9 @@
 name: Aghisna R20
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - multitask-gaming-battery
 
 jobs:
    build:
