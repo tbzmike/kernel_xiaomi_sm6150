@@ -19,9 +19,19 @@ jobs:
           ca-certificates python-is-python3 binutils \
           binutils-aarch64-linux-gnu binutils-arm-linux-gnueabi \
           libghc-libyaml-dev libyaml-dev glibc-source \
+
+    - name: apply multitasking tuning
+      run: |
+          python3 scripts/apply_multitask_tuning.py
+          grep -q '^CONFIG_ZRAM_SIZE_OVERRIDE=6$' arch/arm64/configs/sweet_defconfig
+          grep -q '^int vm_swappiness = 200;$' mm/vmscan.c
+          grep -A8 'procname.*swappiness' kernel/sysctl.c | grep -q 'extra2.*two_hundred'
+
     - name: ready compile...
       run: |
-          curl https://raw.githubusercontent.com/RooGhz720/RooGhz720/main/rx/miui-r20.sh > miui-r20.sh
+          curl --fail --location https://raw.githubusercontent.com/RooGhz720/RooGhz720/main/rx/miui-r20.sh > miui-r20.sh
+          python3 scripts/patch_android16_packaging.py miui-r20.sh
+          grep -q 'AnyKernelbranch="sweetAOSP"' miui-r20.sh
           chmod +x miui-r20.sh
           bash miui-r20.sh
       shell: bash
@@ -29,4 +39,3 @@ jobs:
          CHATID: ${{ secrets.CHAT_ID }}
          API_BOT: ${{ secrets.BOT_API }}
          TYPE_KERNEL: ${{ secrets.EZA }}
-
