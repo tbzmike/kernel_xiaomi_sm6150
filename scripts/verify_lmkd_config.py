@@ -51,10 +51,16 @@ EXPECTED = {
     "CONFIG_UFSFEATURE": "y",
     "CONFIG_UFSHPB": "y",
     "CONFIG_UFSTW": "y",
-    "CONFIG_UFSTW_BOOT_ENABLED": "y",
+    "CONFIG_UFSTW_BOOT_ENABLED": "n",
     "CONFIG_UFSTW_IGNORE_GUARANTEE_BIT": "n",
+    "CONFIG_BLK_INLINE_ENCRYPTION": "y",
     "CONFIG_SCSI_UFS_CRYPTO": "y",
     "CONFIG_SCSI_UFS_CRYPTO_QTI": "y",
+    "CONFIG_DM_CRYPT": "y",
+    "CONFIG_DM_DEFAULT_KEY": "y",
+    "CONFIG_FS_ENCRYPTION": "y",
+    "CONFIG_FS_ENCRYPTION_INLINE_CRYPT": "y",
+    "CONFIG_CRYPTO_DEV_QCOM_ICE": "y",
     "CONFIG_ARCH_SDMMAGPIE": "y",
 
     # Deep-idle and explicit screen-aware profiles.
@@ -63,6 +69,7 @@ EXPECTED = {
     "CONFIG_PM_SLEEP": "y",
     "CONFIG_WQ_POWER_EFFICIENT_DEFAULT": "y",
     "CONFIG_CPU_IDLE": "y",
+    "CONFIG_ARM_CPUIDLE": "y",
     "CONFIG_CPU_IDLE_GOV_MENU": "y",
     "CONFIG_THERMAL": "y",
     "CONFIG_KPROFILES": "y",
@@ -70,6 +77,14 @@ EXPECTED = {
     "CONFIG_AUTO_KPROFILES": "y",
     "CONFIG_AUTO_KPROFILES_MSM_DRM": "y",
     "CONFIG_DEVFREQ_BOOST": "y",
+
+    # Preserve an actionable log if a test kernel fails before Android starts.
+    "CONFIG_PSTORE": "y",
+    "CONFIG_PSTORE_ZLIB_COMPRESS": "y",
+    "CONFIG_PSTORE_CONSOLE": "y",
+    "CONFIG_PSTORE_PMSG": "y",
+    "CONFIG_PSTORE_RAM": "y",
+    "CONFIG_PSTORE_LAST_KMSG": "y",
 }
 
 

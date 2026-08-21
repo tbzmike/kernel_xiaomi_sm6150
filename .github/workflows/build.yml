@@ -52,7 +52,10 @@ jobs:
           python3 scripts/patch_android16_packaging.py upstream-r20-build.sh
           grep -q '^TYPE="AOSP"$' upstream-r20-build.sh
           grep -q '^KERNEL_NAME="TebzaKernel"$' upstream-r20-build.sh
-          grep -q '^AnyKernelbranch="sweetAOSP"$' upstream-r20-build.sh
+          grep -q '^AnyKernel="https://github.com/basamaryan/AnyKernel3"$' upstream-r20-build.sh
+          grep -q '^AnyKernelbranch="master"$' upstream-r20-build.sh
+          grep -q '^AnyKernelcommit="4875a3c81fef3ee363f79c4f682defa58c031631"$' upstream-r20-build.sh
+          grep -q '^export IMG="$MY_DIR"/out/arch/arm64/boot/Image.gz$' upstream-r20-build.sh
           chmod +x upstream-r20-build.sh
           bash upstream-r20-build.sh
 

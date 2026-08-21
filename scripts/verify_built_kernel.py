@@ -26,10 +26,12 @@ if not saved_config.is_file():
     fail("saved out/.config is missing")
 
 with ZipFile(packages[0]) as archive:
-    image_data = archive.read("Image.gz-dtb")
+    image_data = archive.read("Image.gz")
+    dtb_data = archive.read("dtb.img")
+    dtbo_data = archive.read("dtbo.img")
 
 with tempfile.TemporaryDirectory(prefix="tebza-verify-") as temp_dir:
-    image_path = Path(temp_dir) / "Image.gz-dtb"
+    image_path = Path(temp_dir) / "Image.gz"
     image_path.write_bytes(image_data)
     result = subprocess.run(
         [str(root / "scripts/extract-ikconfig"), str(image_path)],
@@ -60,6 +62,14 @@ subprocess.run(
 
 decompressor = zlib.decompressobj(16 + zlib.MAX_WBITS)
 kernel_image = decompressor.decompress(image_data) + decompressor.flush()
+if not decompressor.eof:
+    fail("Image.gz does not contain a complete gzip stream")
+if decompressor.unused_data or decompressor.unconsumed_tail:
+    fail("Image.gz contains trailing data; DTB must be packaged exactly once")
+if not dtb_data.startswith(b"\xd0\x0d\xfe\xed"):
+    fail("dtb.img is not a flattened device tree blob")
+if not dtbo_data.startswith(b"\xd7\xb7\xab\x1e"):
+    fail("dtbo.img is not an Android device-tree overlay image")
 required_image_markers = {
     b"TebzaKernel-sweet-AOSP": "TebzaKernel AOSP release identity",
     b"msm_ds2_dap_ioctl": "Qualcomm Dolby DS2 interface",
@@ -70,4 +80,4 @@ for marker, description in required_image_markers.items():
     if marker not in kernel_image:
         fail(f"compiled kernel is missing {description}")
 
-print("verified signed Image.gz-dtb config plus Dolby, ALSA, and KernelSU markers")
+print("verified pure signed Image.gz plus separate DTB/DTBO and kernel markers")

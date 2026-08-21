@@ -9,37 +9,42 @@ if len(sys.argv) != 2:
 path = Path(sys.argv[1])
 text = path.read_text()
 
-for required in (
+
+def replace_exact(old: str, new: str) -> None:
+    global text
+    old_count = text.count(old)
+    new_count = text.count(new)
+    if old_count == 1 and new_count == 0:
+        text = text.replace(old, new, 1)
+        return
+    if old_count == 0 and new_count == 1:
+        return
+    raise SystemExit(
+        f"unexpected AnyKernel template transition: {old!r} -> {new!r}; "
+        f"found old={old_count}, new={new_count}"
+    )
+
+
+required_once = (
     "device.name1=sweet",
     "device.name2=sweetin",
-    "supported.versions=14 - 16",
+    "BLOCK=/dev/block/bootdevice/by-name/boot;",
     "IS_SLOT_DEVICE=0;",
-):
+    "dump_boot;",
+    "write_boot;",
+)
+for required in required_once:
     if text.count(required) != 1:
-        raise SystemExit(f"unexpected AnyKernel target metadata: {required!r}")
+        raise SystemExit(f"unexpected AnyKernel template: {required!r}")
 
-start_marker = "# magisk detector\n"
-end_marker = "###### Proxymity virtual shit\n"
-if text.count(start_marker) != 1 or text.count(end_marker) != 1:
-    raise SystemExit("unexpected AnyKernel root-selection block")
+replace_exact(
+    "kernel.string=Kernel by aryannn999 @ xda-developers",
+    "kernel.string=TebzaKernel for Redmi Note 10 Pro",
+)
+replace_exact(
+    "supported.versions=11 - 16",
+    "supported.versions=14 - 16",
+)
 
-start = text.index(start_marker)
-end = text.index(end_marker)
-root_selection = '''# Root implementation selection
-# Never activate KernelSU on top of an existing Magisk installation.
-if [ -e /data/adb/magisk.db ] || [ -d /data/adb/magisk ]; then
-    ui_print "Magisk detected!"
-    cleanup_n_update "aghisna.su" "0"
-    ui_print "- Disable KernelSU to avoid dual-root conflicts"
-elif [ -f /data/local/aghisna ] && grep -q NSU /data/local/aghisna; then
-    cleanup_n_update "aghisna.su" "0"
-    ui_print "- Disable KernelSU"
-else
-    cleanup_n_update "aghisna.su" "1"
-    ui_print "- Enable KernelSU"
-fi
-
-'''
-
-path.write_text(text[:start] + root_selection + text[end:])
-print("patched AnyKernel sweet target and Magisk/KernelSU precedence")
+path.write_text(text)
+print("patched verified Spiteful-compatible AnyKernel sweet installer")

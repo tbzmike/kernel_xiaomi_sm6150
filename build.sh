@@ -5,13 +5,23 @@
 ## Copy this script inside the kernel directory
 KERNEL_DEFCONFIG=sweet_defconfig ## Ini defconfignya setiap type hape beda2 (redmi note 10 pro menggunakan sweet_defconfig)
 ANYKERNEL3_DIR=$PWD/AnyKernel3/ ## ini anykernel nya gunanya untuk membukus hasil compile untuk siap flash
-FINAL_KERNEL_ZIP=Aghisna-Kernel-$(date '+%Y%m%d').zip ## INI NAMA KERNEL zip NYA
+ANYKERNEL3_REPO=https://github.com/basamaryan/AnyKernel3
+ANYKERNEL3_COMMIT=4875a3c81fef3ee363f79c4f682defa58c031631
+FINAL_KERNEL_ZIP=TebzaKernel-sweet-AOSP-$(date '+%Y%m%d').zip
 export PATH="$HOME/cosmic/bin:$PATH"
 export ARCH=arm64
 export SUBARCH=arm64
 export KBUILD_COMPILER_STRING="$($HOME/cosmic/bin/clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')"
 
-git clone --depth=1 -b master https://github.com/RooGhz720/Anykernel3.git AnyKernel3
+if ! [ -d "$ANYKERNEL3_DIR/.git" ]; then
+rm -rf "$ANYKERNEL3_DIR"
+mkdir -p "$ANYKERNEL3_DIR"
+git -C "$ANYKERNEL3_DIR" init
+git -C "$ANYKERNEL3_DIR" remote add origin "$ANYKERNEL3_REPO"
+fi
+git -C "$ANYKERNEL3_DIR" fetch --depth=1 origin "$ANYKERNEL3_COMMIT"
+git -C "$ANYKERNEL3_DIR" checkout --detach FETCH_HEAD
+python3 scripts/patch_anykernel.py "$ANYKERNEL3_DIR/anykernel.sh"
 
 if ! [ -d "$HOME/cosmic" ]; then
 echo "Cosmic clang not found! Cloning..."
@@ -55,8 +65,8 @@ make -j$(nproc --all) O=out \
                               CROSS_COMPILE=aarch64-linux-gnu- \
                               CROSS_COMPILE_ARM32=arm-linux-gnueabi
 
-echo "**** Verify Image.gz-dtb & dtbo.img ****"
-ls $PWD/out/arch/arm64/boot/Image.gz-dtb
+echo "**** Verify pure Image.gz plus separate DTB/DTBO ****"
+ls $PWD/out/arch/arm64/boot/Image.gz
 ls $PWD/out/arch/arm64/boot/dtbo.img
 ls $PWD/out/arch/arm64/boot/dtb.img
 
@@ -64,13 +74,13 @@ ls $PWD/out/arch/arm64/boot/dtb.img
 echo "**** Verifying AnyKernel3 Directory ****"
 ls $ANYKERNEL3_DIR
 echo "**** Removing leftovers ****"
-rm -rf $ANYKERNEL3_DIR/Image.gz-dtb
+rm -rf $ANYKERNEL3_DIR/Image.gz
 rm -rf $ANYKERNEL3_DIR/dtbo.img
 rm -rf $ANYKERNEL3_DIR/dtb.img
 rm -rf $ANYKERNEL3_DIR/$FINAL_KERNEL_ZIP
 
-echo "**** Copying Image.gz-dtb & dtbo.img ****"
-cp $PWD/out/arch/arm64/boot/Image.gz-dtb $ANYKERNEL3_DIR/
+echo "**** Copying Image.gz, dtb.img, and dtbo.img ****"
+cp $PWD/out/arch/arm64/boot/Image.gz $ANYKERNEL3_DIR/
 cp $PWD/out/arch/arm64/boot/dtbo.img $ANYKERNEL3_DIR/
 cp $PWD/out/arch/arm64/boot/dtb.img $ANYKERNEL3_DIR/
 
@@ -81,7 +91,7 @@ zip -r9 "../$FINAL_KERNEL_ZIP" * -x README $FINAL_KERNEL_ZIP
 echo "**** Done, here is your sha1 ****"
 cd ..
 rm -rf $ANYKERNEL3_DIR/$FINAL_KERNEL_ZIP
-rm -rf $ANYKERNEL3_DIR/Image.gz-dtb
+rm -rf $ANYKERNEL3_DIR/Image.gz
 rm -rf $ANYKERNEL3_DIR/dtbo.img
 rm -rf $ANYKERNEL3_DIR/dtb.img
 rm -rf out/
@@ -98,4 +108,3 @@ curl -T $FINAL_KERNEL_ZIP temp.sh
 else
 echo "Zip: $FINAL_KERNEL_ZIP"
 fi
-

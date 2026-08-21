@@ -25,6 +25,18 @@ def forbid(path: str, needle: str) -> None:
 require_once("kernel/Makefile", "$(obj)/config_data.gz: $(KCONFIG_CONFIG) FORCE")
 forbid("kernel/Makefile", "config_data.gz: arch/arm64/configs/vendor/stock_defconfig")
 
+# The booting reference package and its exact source build both use a pure
+# compressed kernel with DTB/DTBO supplied as separate files.
+require_once(
+    "build.sh",
+    "cp $PWD/out/arch/arm64/boot/Image.gz $ANYKERNEL3_DIR/",
+)
+require_once(
+    "build.sh",
+    "ANYKERNEL3_COMMIT=4875a3c81fef3ee363f79c4f682defa58c031631",
+)
+forbid("build.sh", "Image.gz-dtb")
+
 # Swap-first behavior and a configurable 6-8 GiB zRAM range.
 require_once("mm/vmscan.c", "int vm_swappiness = 200;")
 require_once("kernel/sysctl.c", "static int two_hundred = 200;")
@@ -83,4 +95,7 @@ for symbol in (
 if (ROOT / "localversion").read_text().strip() != "-TebzaKernel-sweet-AOSP":
     raise SystemExit("source contract failed: inaccurate kernel localversion")
 
-print("verified source-level swap, storage, audio, idle, and gaming contract")
+print(
+    "verified source-level boot packaging, swap, storage, audio, idle, "
+    "and gaming contract"
+)

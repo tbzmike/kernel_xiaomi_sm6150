@@ -6,10 +6,12 @@ from zipfile import BadZipFile, ZipFile
 
 
 REQUIRED_ENTRIES = {
-    "Image.gz-dtb",
+    "Image.gz",
     "dtb.img",
     "dtbo.img",
     "anykernel.sh",
+    "tools/ak3-core.sh",
+    "tools/magiskboot",
     "META-INF/com/google/android/update-binary",
     "META-INF/MANIFEST.MF",
     "META-INF/CERT.SF",
@@ -17,12 +19,22 @@ REQUIRED_ENTRIES = {
 }
 
 ANYKERNEL_GUARDS = {
+    "kernel.string=TebzaKernel for Redmi Note 10 Pro",
     "device.name1=sweet",
     "device.name2=sweetin",
     "supported.versions=14 - 16",
+    "BLOCK=/dev/block/bootdevice/by-name/boot;",
     "IS_SLOT_DEVICE=0;",
-    "if [ -e /data/adb/magisk.db ] || [ -d /data/adb/magisk ]; then",
-    "elif [ -f /data/local/aghisna ] && grep -q NSU /data/local/aghisna; then",
+    "dump_boot;",
+    "write_boot;",
+}
+
+EXPECTED_FILE_SHA256 = {
+    # Exact AnyKernel revision used by the attached, booting Spiteful package.
+    "tools/ak3-core.sh":
+        "1d6753c4dd59ab31a7352a720daaa4b725f7b028b0d1ae20837f5b86dce8db65",
+    "tools/magiskboot":
+        "0b19472b291ce9033c29a83155ff4c1b18be9d1d17d901d63e50f57436378762",
 }
 
 
@@ -62,13 +74,25 @@ try:
             if archive.getinfo(name).file_size == 0:
                 fail(f"required entry is empty: {name}")
 
+        if "Image.gz-dtb" in names:
+            fail("Image.gz-dtb would duplicate the separately packaged DTB")
+
+        for name, expected in EXPECTED_FILE_SHA256.items():
+            actual = sha256(archive.read(name)).hexdigest()
+            if actual != expected:
+                fail(
+                    f"{name} differs from the known-good AnyKernel revision "
+                    f"(expected {expected}, found {actual})"
+                )
+
         anykernel = archive.read("anykernel.sh").decode()
         for guard in ANYKERNEL_GUARDS:
             if anykernel.count(guard) != 1:
                 fail(f"missing or duplicated AnyKernel guard: {guard}")
 
-        if 'cat /data/local/aghisna | grep NSU' in anykernel:
-            fail("unsafe legacy KernelSU selection block is still present")
+        for forbidden in ("BLOCK=auto;", "patch_cmdline", "aghisna.su"):
+            if forbidden in anykernel:
+                fail(f"unexpected installer mutation remains: {forbidden}")
 except BadZipFile as error:
     fail(str(error))
 

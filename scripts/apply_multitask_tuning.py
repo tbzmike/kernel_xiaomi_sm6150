@@ -53,6 +53,57 @@ ensure_exact(
     "CONFIG_MEMCG_SWAP_ENABLED=y",
 )
 
+# Mirror the boot-critical storage encryption, CPU-idle, and persistent-log
+# options from the exact sweet configuration that produced the user's known-
+# good Spiteful kernel. TurboWrite remains available, but is not forced during
+# the first boot of an otherwise untested kernel.
+ensure_exact(
+    "arch/arm64/configs/sweet_defconfig",
+    "# ARM CPU Idle Drivers\n"
+    "#\n"
+    "# CONFIG_ARCH_NEEDS_CPU_IDLE_COUPLED is not set",
+    "# ARM CPU Idle Drivers\n"
+    "#\n"
+    "CONFIG_ARM_CPUIDLE=y\n"
+    "# CONFIG_ARCH_NEEDS_CPU_IDLE_COUPLED is not set",
+)
+
+ensure_exact(
+    "arch/arm64/configs/sweet_defconfig",
+    "CONFIG_UFSTW_BOOT_ENABLED=y",
+    "# CONFIG_UFSTW_BOOT_ENABLED is not set",
+)
+
+ensure_exact(
+    "arch/arm64/configs/sweet_defconfig",
+    "# CONFIG_DM_CRYPT is not set",
+    "CONFIG_DM_CRYPT=y",
+)
+
+ensure_exact(
+    "arch/arm64/configs/sweet_defconfig",
+    "# CONFIG_ROMFS_FS is not set\n"
+    "CONFIG_PSTORE_ZLIB_COMPRESS=y\n"
+    "# CONFIG_PSTORE_LZO_COMPRESS is not set\n"
+    "# CONFIG_PSTORE_LZ4_COMPRESS is not set\n"
+    "# CONFIG_PSTORE_LAST_KMSG is not set",
+    "# CONFIG_ROMFS_FS is not set\n"
+    "CONFIG_PSTORE=y\n"
+    "CONFIG_PSTORE_ZLIB_COMPRESS=y\n"
+    "# CONFIG_PSTORE_LZO_COMPRESS is not set\n"
+    "# CONFIG_PSTORE_LZ4_COMPRESS is not set\n"
+    "CONFIG_PSTORE_CONSOLE=y\n"
+    "CONFIG_PSTORE_PMSG=y\n"
+    "CONFIG_PSTORE_RAM=y\n"
+    "CONFIG_PSTORE_LAST_KMSG=y",
+)
+
+ensure_exact(
+    "arch/arm64/configs/sweet_defconfig",
+    "# CONFIG_CRYPTO_DEV_QCOM_ICE is not set",
+    "CONFIG_CRYPTO_DEV_QCOM_ICE=y",
+)
+
 # This 4.14 tree already computes reclaim priorities on a 200-point scale.
 # Expose that full scale and default to aggressive anonymous-page swapping.
 ensure_exact(

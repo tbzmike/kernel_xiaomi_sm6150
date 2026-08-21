@@ -3,7 +3,8 @@ from pathlib import Path
 import sys
 
 
-ANYKERNEL_COMMIT = "593d37e7c6af871a9f09e5c1a9756e5ac0606b32"
+ANYKERNEL_REPOSITORY = "https://github.com/basamaryan/AnyKernel3"
+ANYKERNEL_COMMIT = "4875a3c81fef3ee363f79c4f682defa58c031631"
 ZIPSIGNER_COMMIT = "5842360ebd4a67d7ec36bbfc10b420751c812701"
 ZIPSIGNER_SHA256 = "efc382651dadd4b47ed3e669a5fb17e1a5cacab2b65c0736c65246f442a4c19f"
 
@@ -29,8 +30,18 @@ text = replace_exact(
 )
 text = replace_exact(
     text,
+    'AnyKernel="https://github.com/RooGhz720/Anykernel3"',
+    f'AnyKernel="{ANYKERNEL_REPOSITORY}"',
+)
+text = replace_exact(
+    text,
     'AnyKernelbranch="sweetMIUI"',
-    f'AnyKernelbranch="sweetAOSP"\nAnyKernelcommit="{ANYKERNEL_COMMIT}"',
+    f'AnyKernelbranch="master"\nAnyKernelcommit="{ANYKERNEL_COMMIT}"',
+)
+text = replace_exact(
+    text,
+    'export IMG="$MY_DIR"/out/arch/arm64/boot/Image.gz-dtb',
+    'export IMG="$MY_DIR"/out/arch/arm64/boot/Image.gz',
 )
 text = replace_exact(
     text,
@@ -84,6 +95,6 @@ text = replace_exact(
 )
 p.write_text(text)
 print(
-    "Android 14-16 packaging selected: "
-    f"sweetAOSP@{ANYKERNEL_COMMIT[:12]} with retained GitHub artifact"
+    "Android 14-16 packaging selected: pure Image.gz plus separate DTB/DTBO, "
+    f"AnyKernel3@{ANYKERNEL_COMMIT[:12]}, with retained GitHub artifact"
 )
