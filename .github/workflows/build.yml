@@ -31,25 +31,17 @@ jobs:
           libssl-dev libtfm-dev wget device-tree-compiler \
           ca-certificates python-is-python3 binutils \
           binutils-aarch64-linux-gnu binutils-arm-linux-gnueabi \
-          libghc-libyaml-dev libyaml-dev glibc-source
+          libghc-libyaml-dev libyaml-dev glibc-source \
+          default-jdk-headless
 
-    - name: Verify multitasking tuning
+    - name: Verify requested source contract
       run: |
           set -euo pipefail
           python3 scripts/apply_multitask_tuning.py
+          git diff --exit-code
+          python3 scripts/verify_source_contract.py
           python3 scripts/verify_lmkd_config.py \
             arch/arm64/configs/sweet_defconfig
-          git diff --exit-code -- \
-            arch/arm64/configs/vendor/sweet_user_defconfig \
-            mm/vmscan.c kernel/sysctl.c
-          grep -q '^CONFIG_SWAP=y$' arch/arm64/configs/sweet_defconfig
-          grep -q '^CONFIG_ZRAM_SIZE_OVERRIDE=6$' arch/arm64/configs/sweet_defconfig
-          grep -q '^int vm_swappiness = 200;$' mm/vmscan.c
-          grep -A8 'procname.*swappiness' kernel/sysctl.c | grep -q 'extra2.*two_hundred'
-          grep -q '^CONFIG_DEFAULT_KP_MODE=2$' arch/arm64/configs/sweet_defconfig
-          grep -q '^CONFIG_AUTO_KPROFILES_MSM_DRM=y$' arch/arm64/configs/sweet_defconfig
-          grep -q '^static bool auto_kprofiles __read_mostly = true;$' \
-            drivers/misc/kprofiles/main.c
 
     - name: Build signed AOSP kernel ZIP
       run: |
@@ -68,7 +60,9 @@ jobs:
       run: |
           set -euo pipefail
           python3 scripts/verify_flashable_zip.py artifacts
-          python3 scripts/verify_lmkd_config.py artifacts/kernel.config
+          python3 scripts/verify_built_kernel.py artifacts
+          signed_zips=(artifacts/*-signed.zip)
+          jarsigner -verify "${signed_zips[0]}"
 
     - name: Upload flashable package
       uses: actions/upload-artifact@v4
@@ -78,5 +72,6 @@ jobs:
           artifacts/*-signed.zip
           artifacts/SHA256SUMS
           artifacts/kernel.config
+          artifacts/kernel.embedded.config
         if-no-files-found: error
         retention-days: 30

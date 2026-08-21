@@ -55,10 +55,14 @@ config ZRAM_MEMORY_TRACKING
 
 	  See Documentation/blockdev/zram.txt for more information.
 
-config ZRAM_SIZE_OVERRIDE
-	int "zram size to set from kernel"
-	range 1 8
-	default 2
+config ZRAM_MIN_SIZE_GB
+	int "Minimum zram size in GiB"
+	range 0 8
+	default 0
+	help
+	  Enforce a lower bound for a userspace-requested zram disksize.
+	  A value of zero leaves the size entirely under userspace control.
+	  This does not prevent Android from requesting a larger zram device.
 
 config ZRAM_DEFAULT_COMP_ALGORITHM
 	string "Default ZRAM algorithm"

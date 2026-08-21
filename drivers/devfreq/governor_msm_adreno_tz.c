@@ -443,6 +443,17 @@ static int tz_get_target_freq(struct devfreq *devfreq, unsigned long *freq)
 
 	/* Update the GPU load statistics */
 	compute_work_load(&stats, priv, devfreq);
+
+	if (unlikely(kp_active_mode() == 3)) {
+		/* The devfreq core still clamps this request to its thermal cap. */
+		priv->bin.total_time = 0;
+		priv->bin.busy_time = 0;
+		priv->bin.cycles_keeping_level = 0;
+		priv->bin.last_level = 0;
+		*freq = devfreq->profile->freq_table[0];
+		return 0;
+	}
+
 	/*
 	 * Do not waste CPU cycles running this algorithm if
 	 * the GPU just started, or if less than FLOOR time
@@ -470,18 +481,15 @@ static int tz_get_target_freq(struct devfreq *devfreq, unsigned long *freq)
 		val = -1 * level;
 	} else {
 		unsigned int refresh_rate = dsi_panel_get_refresh_rate();
+		unsigned long busy_time;
 
 		scm_data[0] = level;
 		scm_data[1] = priv->bin.total_time;
-		if (kp_active_mode() == 1) {
-			scm_data[2] = priv->bin.busy_time + (level * adrenoboost);
-		} else {
-			scm_data[2] = priv->bin.busy_time * (3 / 2) + (level * adrenoboost);
-		}
-		if (refresh_rate > 60)
-			scm_data[2] = priv->bin.busy_time * refresh_rate / 60;
-		else
-			scm_data[2] = priv->bin.busy_time;
+		busy_time = priv->bin.busy_time + (level * adrenoboost);
+		if (kp_active_mode() != 1 && refresh_rate > 60)
+			busy_time = busy_time * refresh_rate / 60;
+		scm_data[2] = min_t(unsigned long, busy_time,
+					priv->bin.total_time);
 		scm_data[3] = context_count;
 		__secure_tz_update_entry3(scm_data, sizeof(scm_data),
 					&val, sizeof(val), priv);

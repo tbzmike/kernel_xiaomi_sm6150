@@ -23,11 +23,12 @@ def ensure_exact(path: str, old: str, new: str) -> None:
     )
 
 
-# Redmi Note 10 Pro (sweet): make the configured zRAM capacity 6 GiB.
+# Redmi Note 10 Pro (sweet): enforce a 6 GiB floor while allowing Android to
+# request a larger zRAM device (for example, 8 GiB).
 ensure_exact(
     "arch/arm64/configs/sweet_defconfig",
-    "CONFIG_ZRAM_SIZE_OVERRIDE=2",
     "CONFIG_ZRAM_SIZE_OVERRIDE=6",
+    "CONFIG_ZRAM_MIN_SIZE_GB=6",
 )
 
 # Android 16 lmkd must receive accurate memory-pressure signals. PSI lets it

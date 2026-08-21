@@ -4205,11 +4205,9 @@ retry:
 	if (gfp_mask & __GFP_KSWAPD_RECLAIM)
 		wake_all_kswapds(order, ac);
 		
-	/* Boost when memory is low so allocation latency doesn't get too bad */
-	/* Dont boost page alloc if battery saver profile is enabled */
-	if (kp_active_mode() == 3) {
-	    devfreq_boost_kick(DEVFREQ_CPU_LLCC_DDR_BW);
-	  }
+	/* Avoid memory-bus allocation stalls in the explicit performance mode. */
+	if (kp_active_mode() == 3)
+		devfreq_boost_kick_max(DEVFREQ_CPU_LLCC_DDR_BW, 128);
 
 	reserve_flags = __gfp_pfmemalloc_flags(gfp_mask);
 	if (reserve_flags)

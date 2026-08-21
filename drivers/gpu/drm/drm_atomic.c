@@ -2249,12 +2249,9 @@ int drm_mode_atomic_ioctl(struct drm_device *dev,
 		return -EINVAL;
 
 	if (!(arg->flags & DRM_MODE_ATOMIC_TEST_ONLY)) {
-	  /*
-	   * Dont boost CPU & DDR if battery saver profile is enabled
-	   */
-	  if (kp_active_mode() == 3) {
-	    devfreq_boost_kick(DEVFREQ_CPU_LLCC_DDR_BW);
-	  }
+		/* Sustain max supported memory bandwidth in performance mode. */
+		if (kp_active_mode() == 3)
+			devfreq_boost_kick_max(DEVFREQ_CPU_LLCC_DDR_BW, 128);
 	}
 
 	drm_modeset_acquire_init(&ctx, 0);

@@ -11,6 +11,18 @@ REQUIRED_ENTRIES = {
     "dtbo.img",
     "anykernel.sh",
     "META-INF/com/google/android/update-binary",
+    "META-INF/MANIFEST.MF",
+    "META-INF/CERT.SF",
+    "META-INF/CERT.RSA",
+}
+
+ANYKERNEL_GUARDS = {
+    "device.name1=sweet",
+    "device.name2=sweetin",
+    "supported.versions=14 - 16",
+    "IS_SLOT_DEVICE=0;",
+    "if [ -e /data/adb/magisk.db ] || [ -d /data/adb/magisk ]; then",
+    "elif [ -f /data/local/aghisna ] && grep -q NSU /data/local/aghisna; then",
 }
 
 
@@ -49,6 +61,14 @@ try:
         for name in REQUIRED_ENTRIES:
             if archive.getinfo(name).file_size == 0:
                 fail(f"required entry is empty: {name}")
+
+        anykernel = archive.read("anykernel.sh").decode()
+        for guard in ANYKERNEL_GUARDS:
+            if anykernel.count(guard) != 1:
+                fail(f"missing or duplicated AnyKernel guard: {guard}")
+
+        if 'cat /data/local/aghisna | grep NSU' in anykernel:
+            fail("unsafe legacy KernelSU selection block is still present")
 except BadZipFile as error:
     fail(str(error))
 

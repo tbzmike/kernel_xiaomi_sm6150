@@ -279,10 +279,16 @@ static unsigned int get_next_freq(struct sugov_policy *sg_policy,
 				  unsigned long util, unsigned long max)
 {
 	struct cpufreq_policy *policy = sg_policy->policy;
-	unsigned int freq = arch_scale_freq_invariant() ?
-				policy->cpuinfo.max_freq : policy->cur;
+	unsigned int freq;
 
-	freq = (freq + (freq >> 3)) * util / max;
+	if (unlikely(kp_active_mode() == 3)) {
+		/* Respect thermal/QoS caps while requesting full profile power. */
+		freq = policy->max;
+	} else {
+		freq = arch_scale_freq_invariant() ?
+			policy->cpuinfo.max_freq : policy->cur;
+		freq = (freq + (freq >> 3)) * util / max;
+	}
 	trace_sugov_next_freq(policy->cpu, util, max, freq);
 
 	if (freq == sg_policy->cached_raw_freq && !sg_policy->need_freq_update)

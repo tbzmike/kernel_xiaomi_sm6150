@@ -49,8 +49,6 @@
 #define DSI_CLOCK_BITRATE_RADIX 10
 #define MAX_TE_SOURCE_ID  2
 
-extern int kp_active_mode(void);
-
 DEFINE_MUTEX(dsi_display_clk_mutex);
 
 static char dsi_display_primary[MAX_CMDLINE_PARAM_LEN];
@@ -7910,7 +7908,7 @@ int dsi_display_pre_commit(void *display,
 
 unsigned int dsi_panel_get_refresh_rate(void)
 {
-	return unlikely(kp_active_mode() == 3) ? 3 : READ_ONCE(cur_refresh_rate);
+	return READ_ONCE(cur_refresh_rate);
 }
 
 int dsi_display_enable(struct dsi_display *display)

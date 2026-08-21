@@ -1808,15 +1808,17 @@ static ssize_t disksize_store(struct device *dev,
 	struct zcomp *comp;
 	struct zram *zram = dev_to_zram(dev);
 	int err;
-
-        #ifndef CONFIG_ZRAM_SIZE_OVERRIDE
 	disksize = memparse(buf, NULL);
 	if (!disksize)
 		return -EINVAL;
-        #else
-	disksize = (u64)SZ_1G * CONFIG_ZRAM_SIZE_OVERRIDE;
-	pr_info("Overriding zram size to %li", disksize);
-        #endif
+
+#if CONFIG_ZRAM_MIN_SIZE_GB > 0
+	if (disksize < (u64)SZ_1G * CONFIG_ZRAM_MIN_SIZE_GB) {
+		disksize = (u64)SZ_1G * CONFIG_ZRAM_MIN_SIZE_GB;
+		pr_info("Increasing zram size to configured %d GiB minimum\n",
+			CONFIG_ZRAM_MIN_SIZE_GB);
+	}
+#endif
 	down_write(&zram->init_lock);
 	if (init_done(zram)) {
 		pr_info("Cannot change disksize for initialized device\n");

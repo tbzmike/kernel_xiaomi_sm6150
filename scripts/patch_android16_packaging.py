@@ -5,6 +5,7 @@ import sys
 
 ANYKERNEL_COMMIT = "593d37e7c6af871a9f09e5c1a9756e5ac0606b32"
 ZIPSIGNER_COMMIT = "5842360ebd4a67d7ec36bbfc10b420751c812701"
+ZIPSIGNER_SHA256 = "efc382651dadd4b47ed3e669a5fb17e1a5cacab2b65c0736c65246f442a4c19f"
 
 
 def replace_exact(text: str, old: str, new: str) -> str:
@@ -19,6 +20,7 @@ if len(sys.argv) != 2:
 
 p = Path(sys.argv[1])
 text = p.read_text()
+text = replace_exact(text, "#!/bin/bash\n", "#!/bin/bash\nset -eo pipefail\n")
 text = replace_exact(text, 'TYPE="MIUI"', 'TYPE="AOSP"')
 text = replace_exact(
     text,
@@ -43,21 +45,31 @@ text = replace_exact(
     '                git -C zip init\n'
     '                git -C zip remote add origin "$AnyKernel"\n'
     '                git -C zip fetch --depth=1 origin "$AnyKernelcommit"\n'
-    '                git -C zip checkout --detach FETCH_HEAD',
+    '                git -C zip checkout --detach FETCH_HEAD\n'
+    '                python3 "$MY_DIR/scripts/patch_anykernel.py" '
+    '"$MY_DIR/zip/anykernel.sh" || exit 1',
 )
 text = replace_exact(
     text,
-    'https://github.com/Magisk-Modules-Repo/zipsigner/raw/master/bin/zipsigner-3.0-dexed.jar',
+    '                curl -sLo zipsigner-3.0.jar '
+    'https://github.com/Magisk-Modules-Repo/zipsigner/raw/master/'
+    'bin/zipsigner-3.0-dexed.jar',
+    '                curl --fail --silent --show-error --location '
+    '--output zipsigner-3.0.jar '
     'https://raw.githubusercontent.com/Magisk-Modules-Repo/zipsigner/'
-    f'{ZIPSIGNER_COMMIT}/bin/zipsigner-3.0-dexed.jar',
+    f'{ZIPSIGNER_COMMIT}/bin/zipsigner-3.0-dexed.jar || exit 1\n'
+    f'                echo "{ZIPSIGNER_SHA256}  zipsigner-3.0.jar" '
+    '| sha256sum -c - || exit 1',
 )
+text = replace_exact(text, "build_kernel || error=true", "build_kernel")
 text = replace_exact(
     text,
     '                java -jar zipsigner-3.0.jar "$ZIP".zip "$ZIP"-signed.zip',
-    '                java -jar zipsigner-3.0.jar "$ZIP".zip "$ZIP"-signed.zip\n'
+    '                java -jar zipsigner-3.0.jar "$ZIP".zip "$ZIP"-signed.zip || exit 1\n'
     '                mkdir -p "$MY_DIR/artifacts"\n'
-    '                cp "$ZIP"-signed.zip "$MY_DIR/artifacts/"\n'
-    '                cp "$MY_DIR/out/.config" "$MY_DIR/artifacts/kernel.config"',
+    '                cp "$ZIP"-signed.zip "$MY_DIR/artifacts/" || exit 1\n'
+    '                cp "$MY_DIR/out/.config" '
+    '"$MY_DIR/artifacts/kernel.config" || exit 1',
 )
 text = replace_exact(
     text,
