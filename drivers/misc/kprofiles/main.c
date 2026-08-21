@@ -31,7 +31,8 @@ static bool kp_override;
 static bool screen_on = true;
 #endif
 
-static bool auto_kprofiles __read_mostly = false;
+/* Use battery mode while the display is off, then restore the active mode. */
+static bool auto_kprofiles __read_mostly = true;
 module_param(auto_kprofiles, bool, 0664);
 
 static unsigned int kp_mode = CONFIG_DEFAULT_KP_MODE;

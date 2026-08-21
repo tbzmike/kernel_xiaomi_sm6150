@@ -44,6 +44,10 @@ jobs:
           grep -q '^CONFIG_ZRAM_SIZE_OVERRIDE=6$' arch/arm64/configs/sweet_defconfig
           grep -q '^int vm_swappiness = 200;$' mm/vmscan.c
           grep -A8 'procname.*swappiness' kernel/sysctl.c | grep -q 'extra2.*two_hundred'
+          grep -q '^CONFIG_DEFAULT_KP_MODE=2$' arch/arm64/configs/sweet_defconfig
+          grep -q '^CONFIG_AUTO_KPROFILES_MSM_DRM=y$' arch/arm64/configs/sweet_defconfig
+          grep -q '^static bool auto_kprofiles __read_mostly = true;$' \
+            drivers/misc/kprofiles/main.c
 
     - name: Build signed AOSP kernel ZIP
       run: |
