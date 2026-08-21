@@ -37,6 +37,8 @@ jobs:
       run: |
           set -euo pipefail
           python3 scripts/apply_multitask_tuning.py
+          python3 scripts/verify_lmkd_config.py \
+            arch/arm64/configs/sweet_defconfig
           git diff --exit-code -- \
             arch/arm64/configs/vendor/sweet_user_defconfig \
             mm/vmscan.c kernel/sysctl.c
@@ -63,7 +65,10 @@ jobs:
           bash upstream-r20-build.sh
 
     - name: Verify flashable package
-      run: python3 scripts/verify_flashable_zip.py artifacts
+      run: |
+          set -euo pipefail
+          python3 scripts/verify_flashable_zip.py artifacts
+          python3 scripts/verify_lmkd_config.py artifacts/kernel.config
 
     - name: Upload flashable package
       uses: actions/upload-artifact@v4
@@ -72,5 +77,6 @@ jobs:
         path: |
           artifacts/*-signed.zip
           artifacts/SHA256SUMS
+          artifacts/kernel.config
         if-no-files-found: error
         retention-days: 30

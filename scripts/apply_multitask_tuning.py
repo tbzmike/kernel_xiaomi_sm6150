@@ -30,6 +30,28 @@ ensure_exact(
     "CONFIG_ZRAM_SIZE_OVERRIDE=6",
 )
 
+# Android 16 lmkd must receive accurate memory-pressure signals. PSI lets it
+# observe real stalls instead of guessing from free-RAM thresholds, while the
+# memory cgroup options provide swap accounting. The old in-kernel LMK remains
+# disabled so userspace lmkd is retained only as the final safety mechanism.
+ensure_exact(
+    "arch/arm64/configs/sweet_defconfig",
+    "# CONFIG_PSI is not set",
+    "CONFIG_PSI=y\n# CONFIG_PSI_DEFAULT_DISABLED is not set",
+)
+
+ensure_exact(
+    "arch/arm64/configs/sweet_defconfig",
+    "# CONFIG_PAGE_COUNTER is not set \n"
+    "# CONFIG_MEMCG is not set\n"
+    "# CONFIG_MEMCG_SWAP is not set\n"
+    "# CONFIG_MEMCG_SWAP_ENABLED is not set",
+    "CONFIG_PAGE_COUNTER=y\n"
+    "CONFIG_MEMCG=y\n"
+    "CONFIG_MEMCG_SWAP=y\n"
+    "CONFIG_MEMCG_SWAP_ENABLED=y",
+)
+
 # This 4.14 tree already computes reclaim priorities on a 200-point scale.
 # Expose that full scale and default to aggressive anonymous-page swapping.
 ensure_exact(

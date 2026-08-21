@@ -32,6 +32,12 @@ text = replace_exact(
 )
 text = replace_exact(
     text,
+    'make "$DEFCONFIG" O=out',
+    'make "$DEFCONFIG" O=out || exit 1\n'
+    'python3 "$MY_DIR/scripts/verify_lmkd_config.py" out/.config || exit 1',
+)
+text = replace_exact(
+    text,
     '                git clone --depth=1 "$AnyKernel" --single-branch -b "$AnyKernelbranch" zip',
     '                mkdir -p zip\n'
     '                git -C zip init\n'
@@ -50,7 +56,8 @@ text = replace_exact(
     '                java -jar zipsigner-3.0.jar "$ZIP".zip "$ZIP"-signed.zip',
     '                java -jar zipsigner-3.0.jar "$ZIP".zip "$ZIP"-signed.zip\n'
     '                mkdir -p "$MY_DIR/artifacts"\n'
-    '                cp "$ZIP"-signed.zip "$MY_DIR/artifacts/"',
+    '                cp "$ZIP"-signed.zip "$MY_DIR/artifacts/"\n'
+    '                cp "$MY_DIR/out/.config" "$MY_DIR/artifacts/kernel.config"',
 )
 text = replace_exact(
     text,
